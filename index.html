@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attention Span Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --accent3: #f59e0b;
+    --danger: #ef4444;
+    --success: #10b981;
+    --text: #f0f0f8;
+    --muted: #6b7280;
+    --mono: 'Space Mono', monospace;
+    --display: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--display);
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* ── Noise overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.6;
+  }
+
+  /* ── Screens ── */
+  .screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
+  }
+
+  /* ── LANDING ── */
+  #landing {
+    gap: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 40%, #1a0a2e 0%, var(--bg) 70%);
+  }
+
+  .landing-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    opacity: 0.8;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .landing-title {
+    font-size: clamp(36px, 8vw, 72px);
+    font-weight: 900;
+    line-height: 1.05;
+    text-align: center;
+    max-width: 640px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.6s 0.1s ease both;
+    background: linear-gradient(135deg, #fff 40%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .landing-sub {
+    font-size: 16px;
+    color: var(--muted);
+    text-align: center;
+    max-width: 360px;
+    line-height: 1.6;
+    margin-bottom: 48px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .btn-primary {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: 0.02em;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    border: none;
+    border-radius: 16px;
+    padding: 18px 52px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 0 40px rgba(124,58,237,0.5);
+    animation: fadeUp 0.6s 0.3s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    border-radius: inherit;
+  }
+  .btn-primary:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 0 60px rgba(124,58,237,0.7);
+  }
+  .btn-primary:active { transform: scale(0.97); }
+
+  .landing-stats {
+    display: flex;
+    gap: 32px;
+    margin-top: 56px;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat-num {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ── TEST ── */
+  #test {
+    background: var(--bg);
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .test-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 20px 24px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+  }
+
+  .timer-bar-wrap {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--border);
+    z-index: 20;
+  }
+  .timer-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.5s linear;
+    width: 100%;
+  }
+
+  .hud {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+  .hud span { color: var(--text); font-weight: 700; }
+
+  .stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 500px;
+    margin: 80px auto 0;
+    cursor: pointer;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* shape card */
+  .shape-card {
+    width: min(220px, 55vw);
+    height: min(220px, 55vw);
+    border-radius: 28px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.25s ease, border-color 0.25s ease, transform 0.12s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+  .shape-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.04), transparent 60%);
+  }
+
+  .shape-inner {
+    font-family: var(--mono);
+    font-size: clamp(60px, 14vw, 100px);
+    font-weight: 700;
+    line-height: 1;
+    transition: transform 0.12s ease, opacity 0.12s ease;
+    pointer-events: none;
+  }
+
+  .shape-card.changed {
+    animation: popIn 0.18s ease;
+    border-color: var(--accent2);
+  }
+
+  .shape-card.wrong-flash {
+    animation: wrongFlash 0.35s ease;
+  }
+  .shape-card.correct-flash {
+    animation: correctFlash 0.3s ease;
+  }
+
+  /* tap hint */
+  .tap-hint {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    font-family: var(--mono);
+    text-align: center;
+    line-height: 1.8;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  /* ── DISTRACTIONS ── */
+  .flash-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0;
+    transition: opacity 0.05s;
+  }
+
+  .notif {
+    position: fixed;
+    top: -100px;
+    right: 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 18px;
+    max-width: 280px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    z-index: 60;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    transition: top 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+    opacity: 0;
+  }
+  .notif.show { top: 16px; opacity: 1; }
+  .notif-icon { font-size: 22px; flex-shrink: 0; }
+  .notif-body { flex: 1; min-width: 0; }
+  .notif-title { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+  .notif-text { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .distract-text {
+    position: fixed;
+    font-size: clamp(11px, 2.5vw, 15px);
+    font-family: var(--mono);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 55;
+    color: var(--accent3);
+    animation: none;
+    white-space: nowrap;
+  }
+
+  /* ── RESULTS ── */
+  #results {
+    background: radial-gradient(ellipse 90% 70% at 50% 30%, #0e0e20 0%, var(--bg) 70%);
+    gap: 0;
+    overflow-y: auto;
+    align-items: center;
+  }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 36px 32px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .result-emoji {
+    font-size: 56px;
+    margin-bottom: 16px;
+    display: block;
+    animation: bounceIn 0.6s 0.2s ease both;
+  }
+
+  .result-headline {
+    font-size: 13px;
+    font-family: var(--mono);
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .result-span {
+    font-size: clamp(52px, 12vw, 80px);
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, #fff 30%, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+  }
+
+  .result-unit {
+    font-size: 18px;
+    color: var(--muted);
+    font-family: var(--mono);
+    margin-bottom: 24px;
+  }
+
+  .result-copy {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #c4b5fd;
+    font-weight: 600;
+    margin-bottom: 28px;
+    padding: 0 8px;
+  }
+
+  .result-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .res-stat {
+    background: var(--surface2);
+    border-radius: 14px;
+    padding: 14px 8px;
+    border: 1px solid var(--border);
+  }
+  .res-stat-val {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .res-stat-lbl {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .percentile-bar-wrap {
+    background: var(--surface2);
+    border-radius: 100px;
+    height: 8px;
+    width: 100%;
+    margin-bottom: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .percentile-bar {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    width: 0%;
+    transition: width 1.2s cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+  .percentile-label {
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--muted);
+    margin-bottom: 28px;
+    text-align: left;
+  }
+  .percentile-label span { color: var(--accent2); font-weight: 700; }
+
+  .btn-share {
+    width: 100%;
+    font-family: var(--display);
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 0 30px rgba(124,58,237,0.4);
+    margin-bottom: 12px;
+  }
+  .btn-share:hover { transform: translateY(-2px); box-shadow: 0 0 50px rgba(124,58,237,0.6); }
+  .btn-share:active { transform: scale(0.97); }
+
+  .btn-retry {
+    width: 100%;
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .btn-retry:hover { color: var(--text); border-color: var(--accent); }
+
+  .copy-toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--success);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 100px;
+    z-index: 999;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+  }
+  .copy-toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── Keyframes ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes bounceIn {
+    from { opacity: 0; transform: scale(0.5); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes popIn {
+    0%   { transform: scale(0.88); }
+    60%  { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+  @keyframes wrongFlash {
+    0%, 100% { border-color: var(--border); box-shadow: 0 24px 64px rgba(0,0,0,0.5); }
+    50% { border-color: var(--danger); box-shadow: 0 0 40px rgba(239,68,68,0.5); }
+  }
+  @keyframes correctFlash {
+    0%, 100% { border-color: var(--border); }
+    50% { border-color: var(--success); box-shadow: 0 0 40px rgba(16,185,129,0.5); }
+  }
+  @keyframes distractFloat {
+    0%   { opacity: 0; transform: translateY(0) scale(0.9); }
+    20%  { opacity: 1; }
+    80%  { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-18px) scale(1); }
+  }
+  @keyframes screenFlick {
+    0%, 100% { opacity: 0; }
+    50%       { opacity: 1; }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  @keyframes ripple {
+    0% { transform: scale(0); opacity: 0.8; }
+    100% { transform: scale(4); opacity: 0; }
+  }
+
+  .ripple-circle {
+    position: absolute;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    pointer-events: none;
+    animation: ripple 0.6s ease-out forwards;
+  }
+
+  /* mobile */
+  @media (max-width: 400px) {
+    .result-card { padding: 28px 20px; border-radius: 20px; }
+    .landing-stats { gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div class="screen" id="landing">
+  <div class="landing-badge">⚡ Neuroscience-backed · 60 seconds</div>
+  <h1 class="landing-title">How long can you<br>actually focus?</h1>
+  <p class="landing-sub">Most people think they have great attention spans. Most people are wrong. Find out where you stand.</p>
+  <button class="btn-primary" id="startBtn">Start the Test →</button>
+  <div class="landing-stats">
+    <div class="stat">
+      <div class="stat-num">8s</div>
+      <div class="stat-label">Avg span</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">2.1M</div>
+      <div class="stat-label">Tests taken</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">60s</div>
+      <div class="stat-label">Duration</div>
+    </div>
+  </div>
+</div>
+
+<!-- TEST -->
+<div class="screen hidden" id="test">
+  <div class="timer-bar-wrap">
+    <div class="timer-bar" id="timerBar"></div>
+  </div>
+  <div class="test-header">
+    <div class="hud">WRONG <span id="hudWrong">0</span></div>
+    <div class="hud" style="font-size:11px;opacity:0.5;animation: pulse 1s infinite">● REC</div>
+    <div class="hud">MISSED <span id="hudMissed">0</span></div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="shape-card" id="shapeCard">
+      <div class="shape-inner" id="shapeInner">▲</div>
+    </div>
+  </div>
+
+  <div class="tap-hint" id="tapHint">
+    Tap the shape when it<br>CHANGES ↑
+  </div>
+</div>
+
+<!-- FAKE NOTIF -->
+<div class="notif" id="notif">
+  <div class="notif-icon" id="notifIcon">📱</div>
+  <div class="notif-body">
+    <div class="notif-title" id="notifTitle">Instagram</div>
+    <div class="notif-text" id="notifText">Someone tagged you in a post</div>
+  </div>
+</div>
+
+<!-- DISTRACT TEXT -->
+<div class="distract-text" id="distractText"></div>
+
+<!-- SCREEN FLASH -->
+<div class="flash-overlay" id="flashOverlay"></div>
+
+<!-- RESULTS -->
+<div class="screen hidden" id="results">
+  <div class="result-card" id="resultCard">
+    <span class="result-emoji" id="resultEmoji">🧠</span>
+    <div class="result-headline">Your attention span</div>
+    <div class="result-span" id="resultSpan">—</div>
+    <div class="result-unit">seconds</div>
+    <div class="result-copy" id="resultCopy">Processing results...</div>
+
+    <div class="percentile-bar-wrap">
+      <div class="percentile-bar" id="percentileBar"></div>
+    </div>
+    <div class="percentile-label" id="percentileLabel">Better than <span id="pctNum">0</span>% of people</div>
+
+    <div class="result-stats">
+      <div class="res-stat">
+        <div class="res-stat-val" id="rReaction">—</div>
+        <div class="res-stat-lbl">Avg react</div>
+      </div>
+      <div class="res-stat">
+        <div class="res-stat-val" id="rWrong">—</div>
+        <div class="res-stat-lbl">Wrong hits</div>
+      </div>
+      <div class="res-stat">
+        <div class="res-stat-val" id="rMissed">—</div>
+        <div class="res-stat-lbl">Missed</div>
+      </div>
+    </div>
+
+    <button class="btn-share" id="shareBtn">📋 Copy My Score</button>
+    <button class="btn-retry" id="retryBtn">Try Again</button>
+  </div>
+</div>
+
+<div class="copy-toast" id="copyToast">✓ Copied to clipboard!</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const DURATION = 60;
+
+let state = {
+  phase: 'landing',      // landing | test | results
+  timeLeft: DURATION,
+  timerInterval: null,
+  shapeInterval: null,
+  distractInterval: null,
+
+  currentSymbol: '',
+  previousSymbol: '',
+  changed: false,          // true if current symbol is a "change event" (should click)
+  changeTime: 0,           // timestamp when change happened
+
+  wrongClicks: 0,
+  missedClicks: 0,
+  correctClicks: 0,
+  reactionTimes: [],       // ms for each correct click
+
+  hideTapHint: false,
+};
+
+// ── Symbols ──────────────────────────────────────────────────────────────
+const SYMBOLS = ['▲','■','●','◆','★','▼','⬟','⬡'];
+const COLORS  = ['#f0f0f8','#a78bfa','#06b6d4','#f59e0b','#10b981','#f87171'];
+
+function pickSymbol(exclude) {
+  let s; do { s = SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)]; } while(s===exclude);
+  return s;
+}
+function pickColor(exclude) {
+  let c; do { c = COLORS[Math.floor(Math.random()*COLORS.length)]; } while(c===exclude);
+  return c;
+}
+
+// ── DOM refs ──────────────────────────────────────────────────────────────
+const $landing   = document.getElementById('landing');
+const $test      = document.getElementById('test');
+const $results   = document.getElementById('results');
+const $timerBar  = document.getElementById('timerBar');
+const $hudWrong  = document.getElementById('hudWrong');
+const $hudMissed = document.getElementById('hudMissed');
+const $shapeCard = document.getElementById('shapeCard');
+const $shapeIn   = document.getElementById('shapeInner');
+const $tapHint   = document.getElementById('tapHint');
+const $notif     = document.getElementById('notif');
+const $notifIcon = document.getElementById('notifIcon');
+const $notifTitle= document.getElementById('notifTitle');
+const $notifText = document.getElementById('notifText');
+const $distract  = document.getElementById('distractText');
+const $flash     = document.getElementById('flashOverlay');
+const $startBtn  = document.getElementById('startBtn');
+const $shareBtn  = document.getElementById('shareBtn');
+const $retryBtn  = document.getElementById('retryBtn');
+const $toast     = document.getElementById('copyToast');
+const $resultCard= document.getElementById('resultCard');
+
+// ── Transitions ───────────────────────────────────────────────────────────
+function showScreen(id) {
+  [$landing,$test,$results].forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+// ── Test logic ────────────────────────────────────────────────────────────
+let currentColor = COLORS[0];
+
+function startTest() {
+  // reset
+  Object.assign(state, {
+    phase:'test', timeLeft:DURATION,
+    changed:false, changeTime:0,
+    wrongClicks:0, missedClicks:0, correctClicks:0,
+    reactionTimes:[], hideTapHint:false
+  });
+  $hudWrong.textContent = '0';
+  $hudMissed.textContent = '0';
+  $tapHint.style.opacity = '1';
+  $timerBar.style.width = '100%';
+
+  state.currentSymbol = SYMBOLS[0];
+  currentColor = COLORS[0];
+  $shapeIn.textContent = state.currentSymbol;
+  $shapeIn.style.color = currentColor;
+  state.previousSymbol = state.currentSymbol;
+
+  showScreen('test');
+
+  // countdown
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    $timerBar.style.width = (state.timeLeft / DURATION * 100) + '%';
+    if (state.timeLeft <= 0) endTest();
+  }, 1000);
+
+  scheduleChange();
+  scheduleDistraction();
+}
+
+// ── Shape change scheduler ────────────────────────────────────────────────
+let changeTimeout = null;
+let pendingMissTimeout = null;
+
+function scheduleChange() {
+  if (state.timeLeft <= 0) return;
+  const delay = 1800 + Math.random() * 3200;  // 1.8–5s
+  clearTimeout(changeTimeout);
+  changeTimeout = setTimeout(triggerChange, delay);
+}
+
+function triggerChange() {
+  if (state.timeLeft <= 0) return;
+
+  // miss penalty for previous change not clicked
+  if (state.changed) {
+    state.missedClicks++;
+    $hudMissed.textContent = state.missedClicks;
+  }
+
+  // decide: real change or fake (same symbol, color shift only sometimes)
+  const isReal = Math.random() > 0.25;
+
+  if (isReal) {
+    state.previousSymbol = state.currentSymbol;
+    state.currentSymbol = pickSymbol(state.previousSymbol);
+    const newColor = pickColor(currentColor);
+    currentColor = newColor;
+    $shapeIn.style.color = currentColor;
+    $shapeIn.textContent = state.currentSymbol;
+    state.changed = true;
+    state.changeTime = Date.now();
+    $shapeCard.classList.add('changed');
+    setTimeout(() => $shapeCard.classList.remove('changed'), 300);
+  } else {
+    // fake: slight color wiggle, no symbol change
+    const fc = pickColor(currentColor);
+    $shapeIn.style.color = fc;
+    setTimeout(() => { $shapeIn.style.color = currentColor; }, 200);
+    state.changed = false;
+  }
+
+  scheduleChange();
+}
+
+// ── Click handler ─────────────────────────────────────────────────────────
+function handleClick(e) {
+  if (state.phase !== 'test' || state.timeLeft <= 0) return;
+
+  // Hide hint on first interact
+  if (!state.hideTapHint) {
+    state.hideTapHint = true;
+    $tapHint.style.opacity = '0';
+  }
+
+  spawnRipple(e);
+
+  if (state.changed) {
+    // correct!
+    const rt = Date.now() - state.changeTime;
+    state.reactionTimes.push(rt);
+    state.correctClicks++;
+    state.changed = false;
+    $shapeCard.classList.add('correct-flash');
+    setTimeout(() => $shapeCard.classList.remove('correct-flash'), 350);
+  } else {
+    // wrong
+    state.wrongClicks++;
+    $hudWrong.textContent = state.wrongClicks;
+    $shapeCard.classList.add('wrong-flash');
+    setTimeout(() => $shapeCard.classList.remove('wrong-flash'), 350);
+  }
+}
+
+function spawnRipple(e) {
+  const rect = $shapeCard.getBoundingClientRect();
+  const r = document.createElement('div');
+  r.className = 'ripple-circle';
+  const x = (e.clientX ?? rect.left + rect.width/2) - rect.left - 40;
+  const y = (e.clientY ?? rect.top  + rect.height/2) - rect.top  - 40;
+  r.style.left = x + 'px';
+  r.style.top  = y + 'px';
+  r.style.background = state.changed ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)';
+  $shapeCard.appendChild(r);
+  setTimeout(() => r.remove(), 650);
+}
+
+document.getElementById('stage').addEventListener('click', handleClick);
+document.getElementById('stage').addEventListener('touchend', e => {
+  e.preventDefault();
+  handleClick(e.changedTouches[0]);
+}, {passive:false});
+
+// ── Distractions ──────────────────────────────────────────────────────────
+const NOTIFS = [
+  { icon:'📸', title:'Instagram', text:'@bestie tagged you in a reel' },
+  { icon:'💬', title:'iMessage', text:'Mom: are you coming home for dinner?' },
+  { icon:'🔴', title:'YouTube', text:'New video from your favorite creator' },
+  { icon:'👻', title:'Snapchat', text:'You have a new snap! Open it now 👀' },
+  { icon:'🎵', title:'Spotify', text:'New playlist drop: Liked Songs Mix' },
+  { icon:'🛍', title:'Amazon', text:'Your order has been shipped!' },
+  { icon:'💌', title:'Gmail', text:'You have 3 unread emails' },
+  { icon:'🏆', title:'Duolingo', text:'Don\'t break your streak! Practice now' },
+  { icon:'🔥', title:'TikTok', text:'@viral.account went live just now' },
+  { icon:'⚡', title:'Twitter/X', text:'Trending in your area: #AttentionSpan' },
+];
+
+const DISTRACT_MSGS = [
+  'look over here →', '← don\'t miss this!',
+  'wait... something\'s different', 'psst... up here ↑',
+  'YOU WON A PRIZE 🎁', 'tap here to claim',
+  'breaking news ⚠️', 'almost done!',
+  'your battery is low 🔋', 'stay focused!',
+  '...or can you? 👀', 'gotcha 😈',
+];
+
+let notifTimeout = null;
+function showNotif() {
+  const n = NOTIFS[Math.floor(Math.random()*NOTIFS.length)];
+  $notifIcon.textContent = n.icon;
+  $notifTitle.textContent = n.title;
+  $notifText.textContent = n.text;
+  $notif.classList.add('show');
+  clearTimeout(notifTimeout);
+  notifTimeout = setTimeout(() => $notif.classList.remove('show'), 2800);
+}
+
+function flashScreen() {
+  const colors = ['rgba(124,58,237,0.08)','rgba(6,182,212,0.06)','rgba(239,68,68,0.07)'];
+  $flash.style.background = colors[Math.floor(Math.random()*colors.length)];
+  $flash.style.opacity = '1';
+  setTimeout(() => { $flash.style.opacity = '0'; }, 80);
+}
+
+function showDistractText() {
+  const msg = DISTRACT_MSGS[Math.floor(Math.random()*DISTRACT_MSGS.length)];
+  $distract.textContent = msg;
+  const margin = 80;
+  $distract.style.left = (margin + Math.random()*(window.innerWidth - 2*margin - 160)) + 'px';
+  $distract.style.top  = (120 + Math.random()*(window.innerHeight - 280)) + 'px';
+  $distract.style.animation = 'none';
+  $distract.offsetHeight; // reflow
+  $distract.style.animation = 'distractFloat 2s ease forwards';
+}
+
+function scheduleDistraction() {
+  if (state.timeLeft <= 0) return;
+
+  const roll = Math.random();
+  const delay = 2000 + Math.random() * 4000;
+
+  setTimeout(() => {
+    if (state.timeLeft <= 0) return;
+    if (roll < 0.4)      showNotif();
+    else if (roll < 0.7) flashScreen();
+    else                 showDistractText();
+    scheduleDistraction();
+  }, delay);
+}
+
+// ── End test ──────────────────────────────────────────────────────────────
+function endTest() {
+  clearInterval(state.timerInterval);
+  clearTimeout(changeTimeout);
+  state.phase = 'results';
+  $notif.classList.remove('show');
+
+  // compute attention span
+  // base: average gap between correct clicks (or full 60 if very good)
+  let span;
+  if (state.reactionTimes.length === 0) {
+    span = 0;
+  } else {
+    const avgReact = state.reactionTimes.reduce((a,b)=>a+b,0) / state.reactionTimes.length;
+    // span: longer avg reaction = longer span (more sustained), penalty for wrong clicks
+    span = Math.max(1, Math.round(
+      (avgReact / 1000) * 1.8
+      - state.wrongClicks * 0.4
+      + state.correctClicks * 0.6
+    ));
+    span = Math.min(span, 58);
+  }
+
+  const avgRT = state.reactionTimes.length
+    ? Math.round(state.reactionTimes.reduce((a,b)=>a+b,0)/state.reactionTimes.length)
+    : null;
+
+  // percentile curve (rough bell curve centered ~8s)
+  const pct = computePercentile(span);
+
+  // copy text & emoji
+  const { emoji, copy } = getResultCopy(span, pct);
+
+  // fill DOM
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultSpan').textContent = span;
+  document.getElementById('resultCopy').textContent = copy;
+  document.getElementById('rReaction').textContent = avgRT ? (avgRT + 'ms') : '—';
+  document.getElementById('rWrong').textContent = state.wrongClicks;
+  document.getElementById('rMissed').textContent = state.missedClicks;
+  document.getElementById('pctNum').textContent = pct;
+  document.getElementById('percentileLabel').innerHTML = `Better than <span id="pctNum">${pct}%</span> of people`;
+
+  showScreen('results');
+
+  // animate bar
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      document.getElementById('percentileBar').style.width = pct + '%';
+    }, 300);
+  });
+
+  // save for share
+  window._lastResult = { span, pct, wrong: state.wrongClicks, missed: state.missedClicks };
+}
+
+function computePercentile(span) {
+  // rough sigmoid — median ~8s → 50th pct
+  const x = (span - 8) / 5;
+  const sig = 1 / (1 + Math.exp(-x));
+  return Math.min(99, Math.max(1, Math.round(sig * 100)));
+}
+
+function getResultCopy(span, pct) {
+  if (span <= 3)  return { emoji:'🤯', copy:'Your phone screen changes faster than you do. Seriously.' };
+  if (span <= 6)  return { emoji:'😬', copy:'You get distracted faster than most people. The notifications won.' };
+  if (span <= 10) return { emoji:'😐', copy:'Dead average. Your attention span is basically a goldfish with WiFi.' };
+  if (span <= 18) return { emoji:'😏', copy:'Not bad. You can actually hold a thought. Rare these days.' };
+  if (span <= 30) return { emoji:'🧠', copy:'Impressive focus. Your brain might actually be built different.' };
+  return { emoji:'🏆', copy:'Elite tier. You\'ve either trained hard or you\'re built for deep work.' };
+}
+
+// ── Share ──────────────────────────────────────────────────────────────────
+$shareBtn.addEventListener('click', () => {
+  const r = window._lastResult || {};
+  const text = `My attention span is ${r.span} seconds. I scored better than ${r.pct}% of people. Can you beat me?\n\nhttps://attentiontest.app`;
+  navigator.clipboard.writeText(text).catch(() => {});
+  $toast.classList.add('show');
+  setTimeout(() => $toast.classList.remove('show'), 2400);
+});
+
+$retryBtn.addEventListener('click', () => {
+  showScreen('landing');
+  state.phase = 'landing';
+});
+
+$startBtn.addEventListener('click', startTest);
+
+// ── prevent scroll on mobile during test ──────────────────────────────────
+document.addEventListener('touchmove', e => {
+  if (state.phase === 'test') e.preventDefault();
+}, { passive: false });
+</script>
+</body>
+</html>
