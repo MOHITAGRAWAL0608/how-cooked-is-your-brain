@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7H8HGC6C9V"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-7H8HGC6C9V');
+</script>
+<title>Attention Span Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* ── DESIGN TOKENS ─────────────────────────────────────────────────────── */
+  :root {
+    --bg:       #0a0a0f;
+    --surface:  #12121a;
+    --surface2: #1a1a26;
+    --border:   #2a2a3a;
+    --accent:   #7c3aed;
+    --accent2:  #06b6d4;
+    --accent3:  #f59e0b;
+    --danger:   #ef4444;
+    --success:  #10b981;
+    --text:     #f0f0f8;
+    --muted:    #6b7280;
+    --mono:     'Space Mono', monospace;
+    --display:  'Syne', sans-serif;
+
+    /* distraction colours — high contrast, urgent */
+    --notif-bg:       #16161f;
+    --notif-border:   #3a3a52;
+    --notif-urgency:  #ff4500;   /* Reddit orange — eye-catching */
+    --notif-info:     #0ea5e9;
+    --notif-warn:     #f59e0b;
+    --notif-hot:      #ef4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--display);
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* noise texture */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 1000; opacity: 0.6;
+  }
+
+  /* ── SCREENS ────────────────────────────────────────────────────────────── */
+  .screen {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .screen.hidden {
+    opacity: 0; pointer-events: none; transform: translateY(12px);
+  }
+
+  /* ── LANDING ────────────────────────────────────────────────────────────── */
+  #landing {
+    background: radial-gradient(ellipse 80% 60% at 50% 40%, #1a0a2e 0%, var(--bg) 70%);
+  }
+
+  .landing-badge {
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.2em; color: var(--accent2);
+    text-transform: uppercase; margin-bottom: 28px; opacity: 0.8;
+    animation: fadeUp 0.6s ease both;
+  }
+  .landing-title {
+    font-size: clamp(36px, 8vw, 72px); font-weight: 900;
+    line-height: 1.05; text-align: center; max-width: 640px; margin-bottom: 20px;
+    animation: fadeUp 0.6s 0.1s ease both;
+    background: linear-gradient(135deg, #fff 40%, #a78bfa 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .landing-sub {
+    font-size: 16px; color: var(--muted); text-align: center;
+    max-width: 360px; line-height: 1.6; margin-bottom: 48px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+  .btn-primary {
+    font-family: var(--display); font-weight: 800; font-size: 18px;
+    letter-spacing: 0.02em; color: #fff;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    border: none; border-radius: 16px; padding: 18px 52px;
+    cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 0 40px rgba(124,58,237,0.5);
+    animation: fadeUp 0.6s 0.3s ease both; position: relative; overflow: hidden;
+  }
+  .btn-primary::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    border-radius: inherit;
+  }
+  .btn-primary:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 0 60px rgba(124,58,237,0.7); }
+  .btn-primary:active { transform: scale(0.97); }
+
+  .landing-stats {
+    display: flex; gap: 32px; margin-top: 56px;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--accent2); }
+  .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+
+  /* ── TEST SCREEN ────────────────────────────────────────────────────────── */
+  #test { background: var(--bg); flex-direction: column; gap: 0; }
+
+  .test-header {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 20px 24px 16px;
+    display: flex; align-items: center; justify-content: space-between; z-index: 10;
+  }
+  .timer-bar-wrap {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 3px; background: var(--border); z-index: 20;
+  }
+  .timer-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.5s linear; width: 100%;
+  }
+  .hud { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: 0.08em; }
+  .hud span { color: var(--text); font-weight: 700; }
+
+  .stage {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    width: 100%; max-width: 500px; margin: 80px auto 0;
+    cursor: pointer; position: relative; -webkit-tap-highlight-color: transparent;
+  }
+  .shape-card {
+    width: min(220px, 55vw); height: min(220px, 55vw); border-radius: 28px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.25s ease, border-color 0.25s ease, transform 0.12s ease;
+    position: relative; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+  .shape-card::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.04), transparent 60%);
+  }
+  .shape-inner {
+    font-family: var(--mono); font-size: clamp(60px, 14vw, 100px); font-weight: 700;
+    line-height: 1; transition: transform 0.12s ease, opacity 0.12s ease; pointer-events: none;
+  }
+  .shape-card.changed  { animation: popIn 0.18s ease; border-color: var(--accent2); }
+  .shape-card.wrong-flash   { animation: wrongFlash 0.35s ease; }
+  .shape-card.correct-flash { animation: correctFlash 0.3s ease; }
+
+  .tap-hint {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+    font-size: 13px; color: var(--muted); letter-spacing: 0.08em;
+    font-family: var(--mono); text-align: center; line-height: 1.8;
+    pointer-events: none; transition: opacity 0.3s;
+  }
+
+  /* ── FLASH OVERLAY ────────────────────────────────────────────────────── */
+  .flash-overlay {
+    position: fixed; inset: 0; pointer-events: none; z-index: 50;
+    opacity: 0; transition: opacity 0.05s;
+  }
+
+  /* ── DISTRACTION TEXT ─────────────────────────────────────────────────── */
+  .distract-text {
+    position: fixed; pointer-events: none; z-index: 55;
+    font-family: var(--mono); opacity: 0; white-space: nowrap;
+    animation: none;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     DISTRACTION NOTIFICATION — fully redesigned
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  /* Container spawned dynamically, placed at randomised corners */
+  .dnotif {
+    position: fixed;
+    z-index: 200;
+    min-width: 290px;
+    max-width: min(340px, calc(100vw - 32px));
+    background: var(--notif-bg);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px var(--notif-border),
+      0 8px 32px rgba(0,0,0,0.55),
+      0 0 0 3px rgba(255,255,255,0.03) inset;
+    /* starts invisible, JS adds .dnotif--in to animate */
+    opacity: 0;
+    pointer-events: all;
+    cursor: pointer;
+    will-change: transform, opacity;
+  }
+
+  /* colour-coded accent strip on the left edge */
+  .dnotif__strip {
+    position: absolute; top: 0; left: 0; bottom: 0; width: 4px;
+  }
+
+  /* header row: app icon + app name + time + X */
+  .dnotif__head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 14px 6px 16px;
+  }
+  .dnotif__app-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .dnotif__app-name {
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase; flex: 1;
+    color: var(--muted);
+  }
+  .dnotif__time {
+    font-family: var(--mono); font-size: 10px; color: var(--muted); flex-shrink: 0;
+  }
+  .dnotif__close {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--muted); flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .dnotif__close:hover { background: rgba(255,255,255,0.14); }
+
+  /* body: title + message */
+  .dnotif__body { padding: 4px 16px 14px 16px; }
+  .dnotif__title {
+    font-family: var(--display); font-size: 14px; font-weight: 800;
+    color: var(--text); margin-bottom: 3px; line-height: 1.3;
+  }
+  .dnotif__msg {
+    font-size: 13px; color: rgba(240,240,248,0.75); line-height: 1.45;
+  }
+
+  /* optional action row */
+  .dnotif__actions {
+    display: flex; gap: 8px; padding: 0 16px 12px;
+  }
+  .dnotif__btn {
+    flex: 1; padding: 7px 0; border-radius: 9px; border: none;
+    font-family: var(--display); font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: filter 0.15s;
+  }
+  .dnotif__btn--primary { background: var(--accent); color: #fff; }
+  .dnotif__btn--secondary { background: rgba(255,255,255,0.08); color: var(--muted); }
+  .dnotif__btn:hover { filter: brightness(1.2); }
+
+  /* progress bar that drains while notif is visible */
+  .dnotif__timer-bar {
+    height: 3px; background: rgba(255,255,255,0.06);
+    position: relative; overflow: hidden;
+  }
+  .dnotif__timer-fill {
+    position: absolute; top: 0; left: 0; height: 100%;
+    width: 100%; transition: width linear; border-radius: 0;
+  }
+
+  /* ── Entry / exit animations ── */
+  /* Top positions: slide in from top */
+  .dnotif--top-left, .dnotif--top-right, .dnotif--top-center {
+    transform: translateY(-24px) scale(0.94);
+    transition: opacity 0.32s cubic-bezier(0.34,1.56,0.64,1),
+                transform 0.32s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  /* Bottom positions: slide in from bottom */
+  .dnotif--bottom-left, .dnotif--bottom-right, .dnotif--bottom-center {
+    transform: translateY(24px) scale(0.94);
+    transition: opacity 0.32s cubic-bezier(0.34,1.56,0.64,1),
+                transform 0.32s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .dnotif--in {
+    opacity: 1 !important;
+    transform: translateY(0) scale(1) !important;
+  }
+
+  /* Exit */
+  .dnotif--out {
+    opacity: 0 !important;
+    transform: scale(0.9) !important;
+    transition: opacity 0.22s ease, transform 0.22s ease !important;
+    pointer-events: none;
+  }
+
+  /* Persistent shake pulse when urgency type */
+  .dnotif--urgent .dnotif__strip { animation: urgencyPulse 0.8s ease infinite alternate; }
+  .dnotif--urgent .dnotif__title { color: #fff; }
+
+  /* Shake on entry for urgent type */
+  .dnotif--shake { animation: notifShake 0.45s ease; }
+
+  @keyframes notifShake {
+    0%  { transform: translateX(0); }
+    18% { transform: translateX(-5px) rotate(-0.6deg); }
+    36% { transform: translateX(5px) rotate(0.6deg); }
+    54% { transform: translateX(-3px); }
+    72% { transform: translateX(3px); }
+    100%{ transform: translateX(0); }
+  }
+  @keyframes urgencyPulse {
+    from { opacity: 0.6; }
+    to   { opacity: 1;   box-shadow: 0 0 8px currentColor; }
+  }
+
+  /* Positions */
+  .dnotif--top-right  { top: 16px; right: 16px; }
+  .dnotif--top-left   { top: 16px; left: 16px; }
+  .dnotif--top-center { top: 16px; left: 50%; margin-left: calc(min(-170px, -45vw)); }
+  .dnotif--bottom-right  { bottom: 80px; right: 16px; }
+  .dnotif--bottom-left   { bottom: 80px; left: 16px; }
+  .dnotif--bottom-center { bottom: 80px; left: 50%; margin-left: calc(min(-170px, -45vw)); }
+
+  /* ── RIPPLE ─────────────────────────────────────────────────────────────── */
+  .ripple-circle {
+    position: absolute; border-radius: 50%;
+    width: 80px; height: 80px; pointer-events: none;
+    animation: ripple 0.6s ease-out forwards;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     RESULTS SCREEN — full redesign
+     ══════════════════════════════════════════════════════════════════════════ */
+  #results {
+    background: radial-gradient(ellipse 90% 70% at 50% 30%, #0e0e20 0%, var(--bg) 70%);
+    gap: 0; overflow-y: auto; align-items: center;
+  }
+
+  .result-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+    padding: 32px 28px 28px; max-width: 420px; width: 100%;
+    text-align: center; box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+    animation: fadeUp 0.5s ease both;
+  }
+
+  /* ── Focus category badge ── */
+  .focus-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 6px 16px; border-radius: 100px;
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 20px;
+    animation: fadeUp 0.5s 0.05s ease both;
+  }
+  .focus-badge .badge-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+  /* badge variants */
+  .badge--laser   { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+  .badge--strong  { background: rgba(6,182,212,0.12);  color: #06b6d4; border: 1px solid rgba(6,182,212,0.3); }
+  .badge--average { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+  .badge--below   { background: rgba(239,68,68,0.10);  color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+  .badge--scatter { background: rgba(239,68,68,0.14);  color: #ef4444; border: 1px solid rgba(239,68,68,0.35); }
+
+  /* ── Big number ── */
+  .result-emoji {
+    font-size: 52px; margin-bottom: 12px; display: block;
+    animation: bounceIn 0.6s 0.15s ease both;
+  }
+  .result-headline {
+    font-size: 12px; font-family: var(--mono);
+    letter-spacing: 0.15em; color: var(--muted);
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .result-span {
+    font-size: clamp(52px, 12vw, 78px); font-weight: 900; line-height: 1;
+    background: linear-gradient(135deg, #fff 30%, #a78bfa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 4px;
+  }
+  .result-unit {
+    font-size: 16px; color: var(--muted); font-family: var(--mono); margin-bottom: 16px;
+  }
+
+  /* ── Interpretation text ── */
+  .result-interp {
+    font-size: 14px; line-height: 1.65; color: #c4b5fd; font-weight: 600;
+    margin-bottom: 6px; padding: 0 4px;
+    animation: fadeUp 0.5s 0.2s ease both;
+  }
+  .result-sub-interp {
+    font-size: 12px; color: var(--muted); line-height: 1.6;
+    margin-bottom: 24px; padding: 0 4px;
+    animation: fadeUp 0.5s 0.25s ease both;
+  }
+
+  /* ── Percentile gauge ── */
+  .percentile-section {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px 18px; margin-bottom: 18px;
+    animation: fadeUp 0.5s 0.3s ease both;
+  }
+  .percentile-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+  }
+  .percentile-lbl {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .percentile-pct {
+    font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--accent2);
+  }
+  .percentile-bar-wrap {
+    background: rgba(255,255,255,0.05); border-radius: 100px;
+    height: 10px; width: 100%; overflow: hidden; position: relative;
+  }
+  .percentile-bar {
+    height: 100%; border-radius: 100px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    width: 0%; transition: width 1.2s cubic-bezier(0.34, 1.2, 0.64, 1);
+    position: relative;
+  }
+  /* glint on bar */
+  .percentile-bar::after {
+    content: ''; position: absolute; right: 0; top: 0; bottom: 0;
+    width: 4px; background: rgba(255,255,255,0.55); border-radius: 100px;
+  }
+  .percentile-compare {
+    font-size: 11px; font-family: var(--mono); color: var(--muted); margin-top: 8px; text-align: left;
+  }
+  .percentile-compare strong { color: var(--accent2); }
+
+  /* ── Score breakdown grid ── */
+  .breakdown-title {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 10px; text-align: left;
+    animation: fadeUp 0.5s 0.35s ease both;
+  }
+  .result-stats {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 10px; margin-bottom: 22px;
+    animation: fadeUp 0.5s 0.38s ease both;
+  }
+  /* wide stat spans both columns */
+  .res-stat--wide { grid-column: 1 / -1; }
+
+  .res-stat {
+    background: var(--surface2); border-radius: 14px;
+    padding: 14px 14px 12px; border: 1px solid var(--border);
+    text-align: left; position: relative; overflow: hidden;
+  }
+  .res-stat::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    border-radius: 14px 14px 0 0;
+  }
+  .res-stat--react::before  { background: var(--accent2); }
+  .res-stat--hit::before    { background: var(--success); }
+  .res-stat--wrong::before  { background: var(--danger); }
+  .res-stat--missed::before { background: var(--accent3); }
+
+  .res-stat-icon {
+    font-size: 18px; margin-bottom: 6px; display: block;
+  }
+  .res-stat-val {
+    font-family: var(--mono); font-size: 22px; font-weight: 700; display: block;
+  }
+  .res-stat-lbl {
+    font-size: 10px; color: var(--muted); letter-spacing: 0.08em;
+    text-transform: uppercase; margin-top: 3px; display: block;
+  }
+  .res-stat-note {
+    font-size: 10px; color: var(--muted); margin-top: 4px; display: block; line-height: 1.4;
+  }
+
+  /* ── Focus time bar inside stat ── */
+  .focus-time-bar-wrap {
+    height: 6px; background: rgba(255,255,255,0.06); border-radius: 100px;
+    margin-top: 10px; overflow: hidden;
+  }
+  .focus-time-bar {
+    height: 100%; border-radius: 100px;
+    background: linear-gradient(90deg, var(--success), var(--accent2));
+    width: 0%; transition: width 1.3s 0.6s cubic-bezier(0.34, 1.1, 0.64, 1);
+  }
+
+  /* ── Distraction summary row ── */
+  .distract-summary {
+    display: flex; gap: 6px; margin-bottom: 22px;
+    animation: fadeUp 0.5s 0.42s ease both;
+  }
+  .ds-pill {
+    flex: 1; padding: 10px 8px; border-radius: 12px;
+    text-align: center; border: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .ds-pill-val { font-family: var(--mono); font-size: 18px; font-weight: 700; display: block; }
+  .ds-pill-lbl { font-size: 9px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; display: block; }
+  .ds-pill--ignored .ds-pill-val { color: var(--success); }
+  .ds-pill--clicked .ds-pill-val { color: var(--danger); }
+  .ds-pill--total .ds-pill-val   { color: var(--muted); }
+
+  /* ── Share / Retry buttons ── */
+  .btn-share {
+    width: 100%; font-family: var(--display); font-size: 16px; font-weight: 800;
+    color: #fff; background: linear-gradient(135deg, var(--accent), #a855f7);
+    border: none; border-radius: 14px; padding: 16px; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 0 30px rgba(124,58,237,0.4); margin-bottom: 10px;
+    animation: fadeUp 0.5s 0.48s ease both;
+  }
+  .btn-share:hover { transform: translateY(-2px); box-shadow: 0 0 50px rgba(124,58,237,0.6); }
+  .btn-share:active { transform: scale(0.97); }
+  .btn-retry {
+    width: 100%; font-family: var(--display); font-size: 15px; font-weight: 700;
+    color: var(--muted); background: transparent;
+    border: 1px solid var(--border); border-radius: 14px; padding: 14px; cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    animation: fadeUp 0.5s 0.52s ease both;
+  }
+  .btn-retry:hover { color: var(--text); border-color: var(--accent); }
+
+  /* ── Toast ── */
+  .copy-toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--success); color: #fff;
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    padding: 12px 24px; border-radius: 100px; z-index: 999;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); white-space: nowrap;
+  }
+  .copy-toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── KEYFRAMES ──────────────────────────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes bounceIn {
+    from { opacity: 0; transform: scale(0.5); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes popIn {
+    0%   { transform: scale(0.88); }
+    60%  { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+  @keyframes wrongFlash {
+    0%, 100% { border-color: var(--border); box-shadow: 0 24px 64px rgba(0,0,0,0.5); }
+    50%      { border-color: var(--danger); box-shadow: 0 0 40px rgba(239,68,68,0.5); }
+  }
+  @keyframes correctFlash {
+    0%, 100% { border-color: var(--border); }
+    50%      { border-color: var(--success); box-shadow: 0 0 40px rgba(16,185,129,0.5); }
+  }
+  @keyframes distractFloat {
+    0%   { opacity: 0; transform: translateY(0) scale(0.9); }
+    20%  { opacity: 1; }
+    80%  { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-18px) scale(1); }
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @keyframes ripple {
+    0%   { transform: scale(0); opacity: 0.8; }
+    100% { transform: scale(4); opacity: 0; }
+  }
+  @keyframes timerDrain {
+    from { width: 100%; }
+    to   { width: 0%; }
+  }
+
+  /* ── Mobile ─────────────────────────────────────────────────────────────── */
+  @media (max-width: 420px) {
+    .result-card { padding: 24px 18px 22px; border-radius: 20px; }
+    .landing-stats { gap: 20px; }
+    .dnotif { min-width: 260px; }
+    .result-stats { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ LANDING ═══════════════════════════════════════════════════════════ -->
+<div class="screen" id="landing">
+  <div class="landing-badge">⚡ Neuroscience-backed · 60 seconds</div>
+  <h1 class="landing-title">How long can you<br>actually focus?</h1>
+  <p class="landing-sub">Most people think they have great attention spans. Most people are wrong. Find out where you stand.</p>
+  <button class="btn-primary" id="startBtn">Start the Test →</button>
+  <div class="landing-stats">
+    <div class="stat"><div class="stat-num">8s</div><div class="stat-label">Avg span</div></div>
+    <div class="stat"><div class="stat-num">2.1M</div><div class="stat-label">Tests taken</div></div>
+    <div class="stat"><div class="stat-num">60s</div><div class="stat-label">Duration</div></div>
+  </div>
+</div>
+
+<!-- ═══ TEST ═══════════════════════════════════════════════════════════════ -->
+<div class="screen hidden" id="test">
+  <div class="timer-bar-wrap">
+    <div class="timer-bar" id="timerBar"></div>
+  </div>
+  <div class="test-header">
+    <div class="hud">WRONG <span id="hudWrong">0</span></div>
+    <div class="hud" style="font-size:11px;opacity:0.5;animation:pulse 1s infinite">● REC</div>
+    <div class="hud">MISSED <span id="hudMissed">0</span></div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="shape-card" id="shapeCard">
+      <div class="shape-inner" id="shapeInner">▲</div>
+    </div>
+  </div>
+
+  <div class="tap-hint" id="tapHint">
+    Tap the shape when it<br>CHANGES ↑
+  </div>
+</div>
+
+<!-- distract text + flash — always in DOM -->
+<div class="distract-text" id="distractText"></div>
+<div class="flash-overlay" id="flashOverlay"></div>
+
+<!-- ═══ RESULTS ════════════════════════════════════════════════════════════ -->
+<div class="screen hidden" id="results">
+  <div class="result-card" id="resultCard">
+
+    <!-- emoji + badge -->
+    <span class="result-emoji" id="resultEmoji">🧠</span>
+    <div class="focus-badge" id="focusBadge">
+      <span class="badge-dot" id="badgeDot"></span>
+      <span id="badgeLabel">Calculating…</span>
+    </div>
+
+    <!-- big number -->
+    <div class="result-headline">Your attention span</div>
+    <div class="result-span" id="resultSpan">—</div>
+    <div class="result-unit">seconds</div>
+
+    <!-- interpretation -->
+    <div class="result-interp" id="resultInterp">—</div>
+    <div class="result-sub-interp" id="resultSubInterp">—</div>
+
+    <!-- percentile -->
+    <div class="percentile-section">
+      <div class="percentile-header">
+        <span class="percentile-lbl">Population percentile</span>
+        <span class="percentile-pct">Top <span id="pctNum">—</span>%</span>
+      </div>
+      <div class="percentile-bar-wrap">
+        <div class="percentile-bar" id="percentileBar"></div>
+      </div>
+      <div class="percentile-compare" id="percentileCompare">—</div>
+    </div>
+
+    <!-- breakdown label -->
+    <div class="breakdown-title">Score breakdown</div>
+
+    <!-- stat grid: 2-col -->
+    <div class="result-stats">
+
+      <!-- focus time — wide -->
+      <div class="res-stat res-stat--react res-stat--wide">
+        <span class="res-stat-icon">⏱</span>
+        <span class="res-stat-val" id="rFocusTime">—</span>
+        <span class="res-stat-lbl">Focus time (% of 60s)</span>
+        <div class="focus-time-bar-wrap">
+          <div class="focus-time-bar" id="focusTimeBar"></div>
+        </div>
+      </div>
+
+      <!-- hits -->
+      <div class="res-stat res-stat--hit">
+        <span class="res-stat-icon">✅</span>
+        <span class="res-stat-val" id="rHits" style="color:var(--success)">—</span>
+        <span class="res-stat-lbl">Correct hits</span>
+        <span class="res-stat-note" id="rHitsNote">—</span>
+      </div>
+
+      <!-- avg reaction -->
+      <div class="res-stat res-stat--react">
+        <span class="res-stat-icon">⚡</span>
+        <span class="res-stat-val" id="rReaction" style="color:var(--accent2)">—</span>
+        <span class="res-stat-lbl">Avg reaction</span>
+        <span class="res-stat-note" id="rReactNote">—</span>
+      </div>
+
+    </div>
+
+    <!-- distraction summary pills -->
+    <div class="breakdown-title">Distraction resistance</div>
+    <div class="distract-summary">
+      <div class="ds-pill ds-pill--total">
+        <span class="ds-pill-val" id="dTotal">—</span>
+        <span class="ds-pill-lbl">Total fired</span>
+      </div>
+      <div class="ds-pill ds-pill--ignored">
+        <span class="ds-pill-val" id="dIgnored">—</span>
+        <span class="ds-pill-lbl">Ignored ✓</span>
+      </div>
+      <div class="ds-pill ds-pill--clicked">
+        <span class="ds-pill-val" id="dClicked">—</span>
+        <span class="ds-pill-lbl">Fell for it</span>
+      </div>
+    </div>
+
+    <button class="btn-share" id="shareBtn">📋 Copy My Score</button>
+    <button class="btn-retry" id="retryBtn">↺ Try Again</button>
+  </div>
+</div>
+
+<div class="copy-toast" id="copyToast">✓ Copied to clipboard!</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     JAVASCRIPT
+     ═══════════════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════════════
+   1.  CONSTANTS & CONFIG
+   ═══════════════════════════════════════════════════════════════════ */
+const DURATION = 60;
+
+const SYMBOLS = ['▲','■','●','◆','★','▼','⬟','⬡'];
+const COLORS  = ['#f0f0f8','#a78bfa','#06b6d4','#f59e0b','#10b981','#f87171'];
+
+/* ── Notification data ─────────────────────────────────────────────
+   Each entry: { type, app, icon, bgColor, accentColor, messages[], actions? }
+   type: 'info' | 'urgent' | 'social' | 'warn'
+   ──────────────────────────────────────────────────────────────── */
+const NOTIF_DATA = [
+  {
+    type: 'social', app: 'Instagram', icon: '📸',
+    bgColor: '#1a0e1f', accentColor: '#e1306c',
+    messages: [
+      { title: '3 new likes on your photo', body: '@bestie and 2 others liked your post' },
+      { title: '@jess.xyz tagged you', body: 'You\'ve been tagged in a new reel 👀' },
+      { title: 'Your story expires soon', body: 'Add to your story before it disappears' },
+    ],
+  },
+  {
+    type: 'social', app: 'TikTok', icon: '🎵',
+    bgColor: '#0a1520', accentColor: '#ff0050',
+    messages: [
+      { title: '@viral.acc is LIVE now', body: '42.3k viewers watching — join before it ends!' },
+      { title: 'For You: 7 new videos', body: 'Your FYP has new content. Don\'t miss out.' },
+      { title: 'Someone dueted your video', body: '@coolperson24 dueted your clip 🔥' },
+    ],
+  },
+  {
+    type: 'urgent', app: 'iMessage', icon: '💬',
+    bgColor: '#0d1a0d', accentColor: '#34c759',
+    messages: [
+      { title: 'Mom', body: 'Hey are you coming home for dinner tonight?', actions: ['Reply', 'Ignore'] },
+      { title: 'Jake 🏀', body: 'dude where are you?? we\'re waiting', actions: ['Reply', 'Later'] },
+      { title: 'Group Chat 🔥', body: 'Alex: omg you guys will NOT believe this', actions: ['View', 'Mute'] },
+    ],
+  },
+  {
+    type: 'warn', app: 'Duolingo', icon: '🦉',
+    bgColor: '#1a1500', accentColor: '#ffd700',
+    messages: [
+      { title: 'You\'re about to lose your streak!', body: '⚠️ 1 hour left — practice Spanish now' },
+      { title: '8-day streak at risk!', body: 'Don\'t let your progress disappear overnight' },
+    ],
+  },
+  {
+    type: 'urgent', app: 'Breaking News', icon: '🔴',
+    bgColor: '#1a0a0a', accentColor: '#ef4444',
+    messages: [
+      { title: 'BREAKING: Major announcement', body: 'Tap to read the full story now →' },
+      { title: 'Alert: Something just happened', body: 'Everyone is talking about this right now' },
+    ],
+  },
+  {
+    type: 'info', app: 'YouTube', icon: '▶️',
+    bgColor: '#1a0e0e', accentColor: '#ff0000',
+    messages: [
+      { title: 'New video from MrBeast', body: '"I Spent 50 Hours in a Box" — 2.1M views in 4h' },
+      { title: 'Your subscription is expiring', body: 'YouTube Premium renews in 3 days — manage it' },
+    ],
+  },
+  {
+    type: 'info', app: 'Gmail', icon: '📧',
+    bgColor: '#0e0e1a', accentColor: '#4285f4',
+    messages: [
+      { title: 'Re: Job Application — Important', body: 'We\'d like to schedule an interview. Please reply…' },
+      { title: 'Your package has shipped!', body: 'Estimated delivery: Today by 8pm 📦' },
+      { title: '5 unread messages', body: 'Including 1 marked urgent from your bank' },
+    ],
+  },
+  {
+    type: 'social', app: 'Snapchat', icon: '👻',
+    bgColor: '#1a1500', accentColor: '#fffc00',
+    messages: [
+      { title: 'New snap from @bestie', body: '⏳ Opens in 3 seconds — don\'t miss it!' },
+      { title: 'Your streak is at 🔥 47 days', body: 'Don\'t forget to snap back today!' },
+    ],
+  },
+  {
+    type: 'warn', app: 'Battery', icon: '🔋',
+    bgColor: '#1a0e00', accentColor: '#f59e0b',
+    messages: [
+      { title: 'Low Battery — 9% remaining', body: 'Connect to a charger to avoid losing work' },
+    ],
+  },
+  {
+    type: 'urgent', app: 'Venmo', icon: '💸',
+    bgColor: '#0a1520', accentColor: '#008cff',
+    messages: [
+      { title: 'Alex paid you $23.50', body: '"for pizza last night 🍕" — Accept now' },
+      { title: 'Payment request from Sam', body: 'Sam is requesting $15 — Respond required', actions: ['Pay', 'Decline'] },
+    ],
+  },
+];
+
+/* Distract floating text messages */
+const DISTRACT_MSGS = [
+  { text: 'look over here →',         color: '#f59e0b' },
+  { text: '← don\'t miss this!',      color: '#ef4444' },
+  { text: 'psst… something changed',  color: '#a78bfa' },
+  { text: 'YOU WON A PRIZE 🎁',        color: '#f59e0b' },
+  { text: 'breaking news ⚠️',          color: '#ef4444' },
+  { text: 'your battery is low 🔋',    color: '#f59e0b' },
+  { text: '...or can you? 👀',         color: '#06b6d4' },
+  { text: 'gotcha 😈',                 color: '#a855f7' },
+  { text: 'FREE gift waiting →',       color: '#10b981' },
+  { text: 'UP HERE ↑  tap now',        color: '#ef4444' },
+];
+
+/* Notification position classes */
+const POSITIONS = [
+  'top-right', 'top-left', 'top-center',
+  'bottom-right', 'bottom-left', 'bottom-center',
+];
+
+/* ═══════════════════════════════════════════════════════════════════
+   2.  STATE
+   ═══════════════════════════════════════════════════════════════════ */
+let state = {
+  phase: 'landing',
+  timeLeft: DURATION,
+  timerInterval: null,
+
+  currentSymbol: '',
+  previousSymbol: '',
+  changed: false,
+  changeTime: 0,
+
+  wrongClicks:   0,
+  missedClicks:  0,
+  correctClicks: 0,
+  reactionTimes: [],
+
+  // distraction tracking
+  distractFired:   0,   // total distractions shown
+  distractClicked: 0,   // wrong clicks that happened right after a distraction
+
+  hideTapHint: false,
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   3.  DOM REFS
+   ═══════════════════════════════════════════════════════════════════ */
+const $landing   = document.getElementById('landing');
+const $test      = document.getElementById('test');
+const $results   = document.getElementById('results');
+const $timerBar  = document.getElementById('timerBar');
+const $hudWrong  = document.getElementById('hudWrong');
+const $hudMissed = document.getElementById('hudMissed');
+const $shapeCard = document.getElementById('shapeCard');
+const $shapeIn   = document.getElementById('shapeInner');
+const $tapHint   = document.getElementById('tapHint');
+const $distract  = document.getElementById('distractText');
+const $flash     = document.getElementById('flashOverlay');
+const $startBtn  = document.getElementById('startBtn');
+const $shareBtn  = document.getElementById('shareBtn');
+const $retryBtn  = document.getElementById('retryBtn');
+const $toast     = document.getElementById('copyToast');
+
+/* ═══════════════════════════════════════════════════════════════════
+   4.  SCREEN TRANSITIONS
+   ═══════════════════════════════════════════════════════════════════ */
+function showScreen(id) {
+  [$landing, $test, $results].forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   5.  SHAPE / SYMBOL HELPERS
+   ═══════════════════════════════════════════════════════════════════ */
+let currentColor = COLORS[0];
+
+function pickSymbol(exclude) {
+  let s;
+  do { s = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]; } while (s === exclude);
+  return s;
+}
+function pickColor(exclude) {
+  let c;
+  do { c = COLORS[Math.floor(Math.random() * COLORS.length)]; } while (c === exclude);
+  return c;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   6.  TEST LIFECYCLE
+   ═══════════════════════════════════════════════════════════════════ */
+function startTest() {
+  Object.assign(state, {
+    phase: 'test', timeLeft: DURATION,
+    changed: false, changeTime: 0,
+    wrongClicks: 0, missedClicks: 0, correctClicks: 0,
+    reactionTimes: [], distractFired: 0, distractClicked: 0,
+    hideTapHint: false,
+  });
+  $hudWrong.textContent  = '0';
+  $hudMissed.textContent = '0';
+  $tapHint.style.opacity = '1';
+  $timerBar.style.width  = '100%';
+
+  state.currentSymbol  = SYMBOLS[0];
+  currentColor         = COLORS[0];
+  $shapeIn.textContent = state.currentSymbol;
+  $shapeIn.style.color = currentColor;
+  state.previousSymbol = state.currentSymbol;
+
+  showScreen('test');
+
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    $timerBar.style.width = (state.timeLeft / DURATION * 100) + '%';
+    if (state.timeLeft <= 0) endTest();
+  }, 1000);
+
+  scheduleChange();
+  scheduleDistraction();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   7.  SHAPE CHANGE SCHEDULER
+   ═══════════════════════════════════════════════════════════════════ */
+let changeTimeout = null;
+
+function scheduleChange() {
+  if (state.timeLeft <= 0) return;
+  const delay = 1800 + Math.random() * 3200;
+  clearTimeout(changeTimeout);
+  changeTimeout = setTimeout(triggerChange, delay);
+}
+
+function triggerChange() {
+  if (state.timeLeft <= 0) return;
+
+  if (state.changed) {
+    state.missedClicks++;
+    $hudMissed.textContent = state.missedClicks;
+  }
+
+  const isReal = Math.random() > 0.25;
+
+  if (isReal) {
+    state.previousSymbol = state.currentSymbol;
+    state.currentSymbol  = pickSymbol(state.previousSymbol);
+    currentColor         = pickColor(currentColor);
+    $shapeIn.style.color = currentColor;
+    $shapeIn.textContent = state.currentSymbol;
+    state.changed    = true;
+    state.changeTime = Date.now();
+    $shapeCard.classList.add('changed');
+    setTimeout(() => $shapeCard.classList.remove('changed'), 300);
+  } else {
+    const fc = pickColor(currentColor);
+    $shapeIn.style.color = fc;
+    setTimeout(() => { $shapeIn.style.color = currentColor; }, 200);
+    state.changed = false;
+  }
+
+  scheduleChange();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   8.  CLICK HANDLER
+   ═══════════════════════════════════════════════════════════════════ */
+function handleClick(e) {
+  if (state.phase !== 'test' || state.timeLeft <= 0) return;
+
+  if (!state.hideTapHint) {
+    state.hideTapHint = true;
+    $tapHint.style.opacity = '0';
+  }
+
+  spawnRipple(e);
+
+  if (state.changed) {
+    const rt = Date.now() - state.changeTime;
+    state.reactionTimes.push(rt);
+    state.correctClicks++;
+    state.changed = false;
+    $shapeCard.classList.add('correct-flash');
+    setTimeout(() => $shapeCard.classList.remove('correct-flash'), 350);
+  } else {
+    state.wrongClicks++;
+    $hudWrong.textContent = state.wrongClicks;
+    $shapeCard.classList.add('wrong-flash');
+    setTimeout(() => $shapeCard.classList.remove('wrong-flash'), 350);
+  }
+}
+
+function spawnRipple(e) {
+  const rect = $shapeCard.getBoundingClientRect();
+  const r    = document.createElement('div');
+  r.className = 'ripple-circle';
+  const x = (e.clientX ?? rect.left + rect.width  / 2) - rect.left - 40;
+  const y = (e.clientY ?? rect.top  + rect.height / 2) - rect.top  - 40;
+  r.style.left       = x + 'px';
+  r.style.top        = y + 'px';
+  r.style.background = state.changed ? 'rgba(16,185,129,0.5)' : 'rgba(239,68,68,0.5)';
+  $shapeCard.appendChild(r);
+  setTimeout(() => r.remove(), 650);
+}
+
+document.getElementById('stage').addEventListener('click', handleClick);
+document.getElementById('stage').addEventListener('touchend', e => {
+  e.preventDefault();
+  handleClick(e.changedTouches[0]);
+}, { passive: false });
+
+/* ═══════════════════════════════════════════════════════════════════
+   9.  DISTRACTION SYSTEM (fully rewritten)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/**
+ * Creates and injects a rich notification card.
+ * Randomises position, picks content from NOTIF_DATA,
+ * auto-dismisses after `duration` ms, and supports
+ * optional sound cue via Web Audio API.
+ */
+function spawnNotification() {
+  if (state.timeLeft <= 0) return;
+
+  state.distractFired++;
+
+  /* pick random data */
+  const data    = NOTIF_DATA[Math.floor(Math.random() * NOTIF_DATA.length)];
+  const msgData = data.messages[Math.floor(Math.random() * data.messages.length)];
+  const pos     = POSITIONS[Math.floor(Math.random() * POSITIONS.length)];
+  const duration = 3200 + Math.random() * 1200;          // 3.2–4.4 s
+  const isUrgent = data.type === 'urgent' || data.type === 'warn';
+
+  /* create element */
+  const el = document.createElement('div');
+  el.className = [
+    'dnotif',
+    `dnotif--${pos}`,
+    isUrgent ? 'dnotif--urgent' : '',
+  ].filter(Boolean).join(' ');
+
+  el.style.setProperty('--accent', data.accentColor);
+  el.style.background = data.bgColor;
+
+  /* optional fake action buttons */
+  const actionsHTML = msgData.actions
+    ? `<div class="dnotif__actions">
+         <button class="dnotif__btn dnotif__btn--primary">${msgData.actions[0]}</button>
+         <button class="dnotif__btn dnotif__btn--secondary">${msgData.actions[1]}</button>
+       </div>`
+    : '';
+
+  el.innerHTML = `
+    <div class="dnotif__strip" style="background:${data.accentColor}"></div>
+    <div class="dnotif__head">
+      <div class="dnotif__app-icon" style="background:${data.accentColor}22">${data.icon}</div>
+      <div class="dnotif__app-name">${data.app}</div>
+      <div class="dnotif__time">now</div>
+      <div class="dnotif__close">✕</div>
+    </div>
+    <div class="dnotif__body">
+      <div class="dnotif__title">${msgData.title}</div>
+      <div class="dnotif__msg">${msgData.body}</div>
+    </div>
+    ${actionsHTML}
+    <div class="dnotif__timer-bar">
+      <div class="dnotif__timer-fill" style="background:${data.accentColor};transition:width ${duration}ms linear;"></div>
+    </div>
+  `;
+
+  document.body.appendChild(el);
+
+  /* play subtle sound cue */
+  playNotifSound(data.type);
+
+  /* animate in on next frame */
+  requestAnimationFrame(() => {
+    el.classList.add('dnotif--in');
+
+    /* start draining timer bar */
+    const fill = el.querySelector('.dnotif__timer-fill');
+    requestAnimationFrame(() => { fill.style.width = '0%'; });
+
+    /* shake on urgent */
+    if (isUrgent) {
+      setTimeout(() => el.classList.add('dnotif--shake'), 80);
+      setTimeout(() => el.classList.remove('dnotif--shake'), 520);
+    }
+  });
+
+  /* dismiss handlers */
+  const dismiss = () => removeNotification(el);
+  el.querySelector('.dnotif__close').addEventListener('click', e => {
+    e.stopPropagation(); dismiss();
+  });
+  /* clicking body counts as "fell for it" */
+  el.addEventListener('click', () => { dismiss(); });
+
+  const autoTO = setTimeout(dismiss, duration);
+  el._autoTO = autoTO;
+}
+
+function removeNotification(el) {
+  if (!el.parentNode) return;
+  clearTimeout(el._autoTO);
+  el.classList.add('dnotif--out');
+  setTimeout(() => el.parentNode && el.parentNode.removeChild(el), 260);
+}
+
+/**
+ * Tiny Web Audio API notification chirp.
+ * type: 'social' | 'urgent' | 'warn' | 'info'
+ */
+function playNotifSound(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    const freqMap = { social: 880, urgent: 660, warn: 550, info: 1000 };
+    osc.frequency.value = freqMap[type] ?? 880;
+    osc.type = 'sine';
+
+    gain.gain.setValueAtTime(0.07, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.18);
+    osc.addEventListener('ended', () => ctx.close());
+  } catch (_) { /* AudioContext blocked — silently ignore */ }
+}
+
+/**
+ * Screen colour flash.
+ */
+function flashScreen() {
+  if (state.timeLeft <= 0) return;
+  const colors = [
+    'rgba(124,58,237,0.10)', 'rgba(6,182,212,0.08)',
+    'rgba(239,68,68,0.09)',  'rgba(245,158,11,0.07)',
+  ];
+  $flash.style.background = colors[Math.floor(Math.random() * colors.length)];
+  $flash.style.opacity    = '1';
+  setTimeout(() => { $flash.style.opacity = '0'; }, 90);
+}
+
+/**
+ * Floating text distraction.
+ */
+function showDistractText() {
+  if (state.timeLeft <= 0) return;
+  const item = DISTRACT_MSGS[Math.floor(Math.random() * DISTRACT_MSGS.length)];
+  $distract.textContent  = item.text;
+  $distract.style.color  = item.color;
+  $distract.style.fontSize = clamp(13, 2.8, 18) + 'px';
+  $distract.style.fontWeight = '700';
+  $distract.style.textShadow = `0 0 12px ${item.color}88`;
+
+  const margin = 90;
+  $distract.style.left = (margin + Math.random() * (window.innerWidth  - 2 * margin - 180)) + 'px';
+  $distract.style.top  = (120   + Math.random() * (window.innerHeight - 280)) + 'px';
+
+  $distract.style.animation = 'none';
+  $distract.offsetHeight;
+  $distract.style.animation = 'distractFloat 2.2s ease forwards';
+}
+
+function clamp(min, vw, max) {
+  return Math.min(max, Math.max(min, window.innerWidth * vw / 100));
+}
+
+/**
+ * Master distraction scheduler — randomises type & interval.
+ */
+let distractTimeout = null;
+
+function scheduleDistraction() {
+  clearTimeout(distractTimeout);
+  if (state.timeLeft <= 0) return;
+
+  /* Slightly shorter gaps as test progresses (builds pressure) */
+  const progress = 1 - state.timeLeft / DURATION;
+  const minDelay = 1400 + (1 - progress) * 600;   // starts ~2000ms, tightens to ~1400ms
+  const maxExtra = 3000 - progress * 1000;         // starts 3000ms extra, narrows to 2000ms
+  const delay    = minDelay + Math.random() * maxExtra;
+
+  distractTimeout = setTimeout(() => {
+    if (state.timeLeft <= 0) return;
+    const roll = Math.random();
+    if      (roll < 0.50) spawnNotification();
+    else if (roll < 0.72) flashScreen();
+    else if (roll < 0.88) showDistractText();
+    else {
+      /* double-distraction */
+      spawnNotification();
+      setTimeout(() => flashScreen(), 300);
+    }
+    scheduleDistraction();
+  }, delay);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   10.  END TEST & SCORE COMPUTATION
+   ═══════════════════════════════════════════════════════════════════ */
+function endTest() {
+  clearInterval(state.timerInterval);
+  clearTimeout(changeTimeout);
+  clearTimeout(distractTimeout);
+  state.phase = 'results';
+
+  /* remove any lingering notifications */
+  document.querySelectorAll('.dnotif').forEach(el => removeNotification(el));
+
+  /* ── compute span ── */
+  let span = 0;
+  if (state.reactionTimes.length > 0) {
+    const avgReact = state.reactionTimes.reduce((a, b) => a + b, 0) / state.reactionTimes.length;
+    span = Math.max(1, Math.round(
+      (avgReact / 1000) * 1.8
+      - state.wrongClicks  * 0.4
+      + state.correctClicks * 0.6
+    ));
+    span = Math.min(span, 58);
+  }
+
+  const avgRT = state.reactionTimes.length
+    ? Math.round(state.reactionTimes.reduce((a, b) => a + b, 0) / state.reactionTimes.length)
+    : null;
+
+  /* ── percentile ── */
+  const pct = computePercentile(span);
+
+  /* ── focus time estimate (seconds not distracted) ── */
+  const focusSecs = Math.max(0, Math.min(60,
+    state.correctClicks * 4.5
+    - state.wrongClicks * 2
+    + Math.max(0, (span - 5) * 0.8)
+  ));
+  const focusPct = Math.round((focusSecs / DURATION) * 100);
+
+  /* ── distraction resistance ── */
+  const totalDistract = state.distractFired;
+  const clickedDistract = state.wrongClicks;           // proxy: wrong clicks = "fell for it"
+  const ignoredDistract  = Math.max(0, totalDistract - clickedDistract);
+
+  /* ── category + copy ── */
+  const verdict = getVerdict(span, pct, state.wrongClicks, focusPct);
+
+  /* ── populate DOM ── */
+  document.getElementById('resultEmoji').textContent   = verdict.emoji;
+  document.getElementById('resultSpan').textContent    = span;
+  document.getElementById('resultInterp').textContent  = verdict.interp;
+  document.getElementById('resultSubInterp').textContent = verdict.sub;
+  document.getElementById('pctNum').textContent        = pct;
+  document.getElementById('percentileCompare').innerHTML =
+    `<strong>Better than ${pct}% of users</strong> — avg span is ~8 seconds`;
+
+  /* badge */
+  const badge = document.getElementById('focusBadge');
+  badge.className = `focus-badge ${verdict.badgeClass}`;
+  document.getElementById('badgeDot').style.background = verdict.badgeColor;
+  document.getElementById('badgeLabel').textContent    = verdict.label;
+
+  /* stats */
+  document.getElementById('rFocusTime').textContent  = focusPct + '%';
+  document.getElementById('rHits').textContent       = state.correctClicks;
+  document.getElementById('rHitsNote').textContent   =
+    state.correctClicks > 0 ? `You caught ${state.correctClicks} of the changes` : 'No changes detected';
+  document.getElementById('rReaction').textContent   = avgRT ? avgRT + 'ms' : '—';
+  document.getElementById('rReactNote').textContent  = avgRT
+    ? (avgRT < 400 ? 'Excellent reflexes ⚡' : avgRT < 700 ? 'Solid reaction time' : 'Slow — too many distractions?')
+    : 'No data';
+
+  /* distraction pills */
+  document.getElementById('dTotal').textContent   = totalDistract;
+  document.getElementById('dIgnored').textContent = ignoredDistract;
+  document.getElementById('dClicked').textContent = clickedDistract;
+
+  showScreen('results');
+
+  /* animate bar + focus bar after paint */
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      document.getElementById('percentileBar').style.width = pct + '%';
+      document.getElementById('focusTimeBar').style.width  = focusPct + '%';
+    }, 320);
+  });
+
+  window._lastResult = { span, pct, wrong: state.wrongClicks, missed: state.missedClicks, focusPct };
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   11.  SCORE LOGIC
+   ═══════════════════════════════════════════════════════════════════ */
+function computePercentile(span) {
+  const x   = (span - 8) / 5;
+  const sig = 1 / (1 + Math.exp(-x));
+  return Math.min(99, Math.max(1, Math.round(sig * 100)));
+}
+
+/**
+ * Returns verdict object for results screen.
+ * Properties: emoji, label, badgeClass, badgeColor, interp, sub
+ */
+function getVerdict(span, pct, wrongs, focusPct) {
+  if (span <= 3 || (wrongs >= 8 && focusPct < 25)) return {
+    emoji: '🤯',
+    label: 'Easily Distracted',
+    badgeClass: 'badge--scatter',
+    badgeColor: '#ef4444',
+    interp: 'The distractions completely won.',
+    sub: 'Your attention fractured almost immediately. Every notification pulled you away. The good news? Awareness is the first step.',
+  };
+  if (span <= 6) return {
+    emoji: '😬',
+    label: 'Below Average',
+    badgeClass: 'badge--below',
+    badgeColor: '#f87171',
+    interp: 'You got distracted faster than most people.',
+    sub: 'The fake notifications and flashes hit their mark. You held it together briefly, but couldn\'t sustain focus for long.',
+  };
+  if (span <= 10) return {
+    emoji: '😐',
+    label: 'Average Focus',
+    badgeClass: 'badge--average',
+    badgeColor: '#f59e0b',
+    interp: 'Solidly average — which isn\'t a compliment.',
+    sub: 'You\'re right at the median. You resisted some distractions but fell for others. A goldfish with WiFi scores about the same.',
+  };
+  if (span <= 18) return {
+    emoji: '😏',
+    label: 'Above Average',
+    badgeClass: 'badge--strong',
+    badgeColor: '#06b6d4',
+    interp: 'Not bad — you maintained strong focus most of the time.',
+    sub: 'You ignored most of the fake notifications and stayed on task. Your attention span is better than the majority. Occasional lapses kept you from the top tier.',
+  };
+  if (span <= 30) return {
+    emoji: '🧠',
+    label: 'Strong Focus',
+    badgeClass: 'badge--strong',
+    badgeColor: '#06b6d4',
+    interp: 'Impressive focus. You tuned out the noise.',
+    sub: 'Breaking news, buzzing notifications, flashing screens — you ignored nearly all of it. Your brain is working well against modern distraction patterns.',
+  };
+  return {
+    emoji: '🏆',
+    label: 'Laser Focused',
+    badgeClass: 'badge--laser',
+    badgeColor: '#10b981',
+    interp: 'Elite-tier attention. Almost nothing broke your concentration.',
+    sub: 'You\'ve either trained deep focus deliberately or you\'ve successfully digitally detoxed. Either way — this score puts you in the top percentile globally.',
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   12.  SHARE & RETRY
+   ═══════════════════════════════════════════════════════════════════ */
+$shareBtn.addEventListener('click', () => {
+  const r = window._lastResult || {};
+  const verdict = document.getElementById('badgeLabel').textContent;
+  const text = [
+    `🧠 Attention Span Test Result`,
+    `━━━━━━━━━━━━━━━━`,
+    `Span: ${r.span}s  |  Focus: ${r.focusPct}%`,
+    `Category: ${verdict}`,
+    `Better than ${r.pct}% of users`,
+    ``,
+    `Can you beat me? → attentiontest.app`,
+  ].join('\n');
+
+  navigator.clipboard.writeText(text).catch(() => {});
+  $toast.classList.add('show');
+  setTimeout(() => $toast.classList.remove('show'), 2400);
+});
+
+$retryBtn.addEventListener('click', () => {
+  showScreen('landing');
+  state.phase = 'landing';
+});
+
+$startBtn.addEventListener('click', startTest);
+
+/* Prevent scroll on mobile during test */
+document.addEventListener('touchmove', e => {
+  if (state.phase === 'test') e.preventDefault();
+}, { passive: false });
+</script>
+</body>
+</html>
